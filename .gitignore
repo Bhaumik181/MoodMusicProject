@@ -1,0 +1,15 @@
+# Ignore large data folders
+data/
+preprocessed/
+models/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore model + numpy files anywhere
+*.npy
+*.h5
+
+# Ignore temporary files
+*.tmp
