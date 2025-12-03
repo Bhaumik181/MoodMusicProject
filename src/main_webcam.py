@@ -2,6 +2,7 @@
 
 import cv2
 import numpy as np
+from collections import deque  # NEW: for smoothing over frames
 
 from src.emotion_utils import predict_emotion_from_pixels, recommend_song
 from src.config import EMOTION_MAP
@@ -29,6 +30,12 @@ def main():
     last_emotion_idx = None
     current_songs = []  # list of {'song', 'artist', 'link'}
 
+    # -----------------------------
+    # Smoothing over last N frames
+    # -----------------------------
+    SMOOTH_WINDOW = 7  # tweak this: 5–10 is a good range
+    probs_queue = deque(maxlen=SMOOTH_WINDOW)
+
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -42,15 +49,25 @@ def main():
             face = gray[y:y + h, x:x + w]
             face = cv2.resize(face, (48, 48))
 
-            # Ensemble emotion prediction
-            emotion_idx, emotion_name, _ = predict_emotion_from_pixels(face)
-            last_emotion_idx = emotion_idx
+            # Get per-frame ensemble prediction
+            raw_idx, raw_name, probs = predict_emotion_from_pixels(face)
 
-            # Draw face box + emotion
+            # Add this frame's probabilities to our queue
+            probs_queue.append(probs)
+
+            # Compute smoothed probabilities over last N frames
+            avg_probs = np.mean(probs_queue, axis=0)
+            smooth_idx = int(np.argmax(avg_probs))
+            smooth_name = EMOTION_MAP.get(smooth_idx, "Unknown")
+
+            # Use the SMOOTHED emotion as final one
+            last_emotion_idx = smooth_idx
+
+            # Draw face box + smoothed emotion
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             cv2.putText(
                 frame,
-                emotion_name,
+                smooth_name,
                 (x, y - 10),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.9,
@@ -67,6 +84,9 @@ def main():
                 (0, 0, 255),
                 2,
             )
+            # Slowly clear old emotions if no face
+            if len(probs_queue) > 0:
+                probs_queue.popleft()
 
         # ─────────────────────────────────────────────
         #  Draw current recommended songs on the frame
@@ -101,7 +121,7 @@ def main():
                     cv2.LINE_AA,
                 )
 
-        cv2.imshow("Mood Music AI (Ensemble)", frame)
+        cv2.imshow("Mood Music AI (Smoothed Ensemble)", frame)
 
         key = cv2.waitKey(1) & 0xFF
 
@@ -113,7 +133,7 @@ def main():
                 print("No emotion detected yet. Look at the camera :)")
             else:
                 emo_name = EMOTION_MAP[last_emotion_idx]
-                print(f"\nEmotion: {emo_name}")
+                print(f"\nEmotion (smoothed): {emo_name}")
                 recs = recommend_song(last_emotion_idx, n=3)
                 if not recs:
                     print("No songs found for this emotion.")

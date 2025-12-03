@@ -75,11 +75,13 @@ print(f"✅ Valid songs with emotion_int: {after}/{before}")
 print("Emotion distribution:\n", SONGS_DF["emotion_int"].value_counts())
 
 
-def predict_emotion_from_pixels(pixels_48x48: np.ndarray):
+def predict_emotion_from_pixels(pixels_48x48: np.ndarray, debug: bool = False):
     """
     Ensemble prediction from multiple models.
     Input: 48x48 grayscale numpy array (0–255 or 0–1)
     Output: (emotion_idx, emotion_name, avg_probs)
+
+    If debug=True, prints each model's top prediction and the final ensemble result.
     """
     img = pixels_48x48.astype("float32")
     if img.max() > 1.0:
@@ -88,19 +90,29 @@ def predict_emotion_from_pixels(pixels_48x48: np.ndarray):
     img = np.expand_dims(img, axis=-1)  # (48,48,1)
     img = np.expand_dims(img, axis=0)   # (1,48,48,1)
 
-    # Sum probabilities from all models
     total_probs = None
-    for m in MODELS:
+
+    if debug:
+        print(f"\n[DEBUG] Using {len(MODELS)} models for ensemble:")
+
+    for i, m in enumerate(MODELS):
         preds = m.predict(img)
+        if debug:
+            model_top_idx = int(np.argmax(preds[0]))
+            model_top_name = EMOTION_MAP.get(model_top_idx, "Unknown")
+            print(f"[DEBUG] Model {i+1} top idx: {model_top_idx} -> {model_top_name}")
+
         if total_probs is None:
             total_probs = preds[0]
         else:
             total_probs += preds[0]
 
-    # Average
     avg_probs = total_probs / len(MODELS)
     emotion_idx = int(np.argmax(avg_probs))
     emotion_name = EMOTION_MAP.get(emotion_idx, "Unknown")
+
+    if debug:
+        print(f"[DEBUG] Ensemble final idx: {emotion_idx} -> {emotion_name}")
 
     return emotion_idx, emotion_name, avg_probs
 
