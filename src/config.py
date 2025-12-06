@@ -43,7 +43,7 @@ MODELS_DIR = os.path.join(BASE_DIR, "models")
 EMOTION_MODEL_PATHS = [
     os.path.join(MODELS_DIR, "emotion_model_v1.h5"),
     os.path.join(MODELS_DIR, "emotion_model_v2.h5"),
-    # os.path.join(MODELS_DIR, "emotion_model_v3.h5"),
+    os.path.join(MODELS_DIR, "emotion_model_v3.h5"),
 ]
 
 # ---------------------------
