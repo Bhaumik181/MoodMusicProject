@@ -26,9 +26,7 @@ from src.config import FER_PRE_DIR, MODELS_DIR, EMOTION_MODEL_PATH, EMOTION_MAP
 
 
 def build_model(num_classes: int):
-    """
-    CNN with more regularization to reduce overfitting on FER2013.
-    """
+    #CNN with more regularization to reduce overfitting on FER2013.
     weight_decay = 1e-4  # L2 regularization factor
 
     model = Sequential(
