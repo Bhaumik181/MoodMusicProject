@@ -111,9 +111,7 @@ def build_model(num_classes: int):
 def main():
     os.makedirs(MODELS_DIR, exist_ok=True)
 
-    # -----------------------------
     # Load preprocessed FER arrays
-    # -----------------------------
     X_train = np.load(os.path.join(FER_PRE_DIR, "X_train.npy"))
     X_val = np.load(os.path.join(FER_PRE_DIR, "X_val.npy"))
     X_test = np.load(os.path.join(FER_PRE_DIR, "X_test.npy"))
@@ -131,9 +129,7 @@ def main():
     print("X_val:  ", X_val.shape, "y_val:  ", y_val.shape)
     print("X_test: ", X_test.shape, "y_test: ", y_test.shape)
 
-    # -----------------------------
     # Data Augmentation
-    # -----------------------------
     train_datagen = ImageDataGenerator(
         rotation_range=15,
         width_shift_range=0.1,
