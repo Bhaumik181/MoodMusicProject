@@ -146,9 +146,8 @@ def main():
     model = build_model(num_classes)
     model.summary()
 
-    # -----------------------------
+  
     # Callbacks
-    # -----------------------------
     early_stop = EarlyStopping(
         monitor="val_accuracy",
         patience=7,
